@@ -45,7 +45,8 @@ for i in range(len(fname)):
     # convert to np.float32
     Z = np.float32(Z)
 
-
+    # Perform K-means clustering. Try optimize cluster centroids from previous cycle
+    # This is useful only if the images are in sequence
     try:
         ret, label, center = cv2.kmeans(Z, K, label, criteria, 1, cv2.KMEANS_USE_INITIAL_LABELS)
     except NameError:
