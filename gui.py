@@ -14,6 +14,7 @@ class App(Frame):
         self.img_id = None
         self.canvas = None
         self.FRAME_COUNT = 0
+        self.brush_point = (0, 0)
         self.grid()
         self.__createWidgets()
         self.__init_canvas()
@@ -28,16 +29,27 @@ class App(Frame):
         nav_frame = Frame(ctrl_frame)
         nav_frame.pack(side=BOTTOM, anchor=N)
 
-        self.canvas = Canvas(img_frame, width=200, height=200, bg="green", cursor="cross", relief=SUNKEN)
-        self.canvas.pack(fill='both', expand=True)
+        self.__create_canvas(img_frame)
         # lmain = Label(img_frame)
         # lmain.pack()
-        methods = ["None","Canny","K-Means"]
+        self.__create_control_panel(slides_frame)
+        self.__create_nav_panel(nav_frame)
+
+
+    def __create_canvas(self,img_frame):
+        self.canvas = Canvas(img_frame, width=200, height=200, bg="green", cursor="cross", relief=SUNKEN)
+        self.canvas.pack(fill='both', expand=True)
+        self.canvas.bind("<ButtonPress-1>", self.get_brush_coordinates)
+
+    def __create_control_panel(self,slides_frame):
+        methods = ["None", "Canny", "K-Means"]
         method_opt = OptionMenu(slides_frame, self.seg_method, *methods)
         method_opt.pack()
         self.seg_method.set(methods[0])
         brightness_slider = Scale(slides_frame, label="brightness", orient=HORIZONTAL, variable=self.brightness)
         brightness_slider.pack()
+
+    def __create_nav_panel(self,nav_frame):
         prev_button = Button(nav_frame, text="<<", command=self.__call_prev_frame)
         next_button = Button(nav_frame, text=">>", command=self.__call_next_frame)
         step_scale = Scale(nav_frame, label="step increment", orient=HORIZONTAL,
@@ -52,7 +64,6 @@ class App(Frame):
         self.img_id = self.canvas.create_image(0, 0, anchor='nw', image=self.loaded_img)
 
 
-        pass
     def __load_image(self, fileidx):
         img = cv2.imread(self.fname[fileidx], cv2.IMREAD_COLOR)
         img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
@@ -85,6 +96,10 @@ class App(Frame):
         if self.FRAME_COUNT < 0:
             FRAME_COUNT = 0
         self.__show_frame(self.FRAME_COUNT)
+
+    def get_brush_coordinates(self, event):
+        self.brush_point = (event.x, event.y)
+        print("brush coords:",self.brush_point)
 
 
 def sort_numbered_fname(e):
