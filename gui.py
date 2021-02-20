@@ -8,6 +8,7 @@ class App(Frame):
         Frame.__init__(self, master)
         self.frame_increment = IntVar()
         self.brightness = IntVar()
+        self.seg_method = StringVar()
         self.fname = fileList
         self.loaded_img = None
         self.img_id = None
@@ -31,10 +32,12 @@ class App(Frame):
         self.canvas.pack(fill='both', expand=True)
         # lmain = Label(img_frame)
         # lmain.pack()
-
+        methods = ["None","Canny","K-Means"]
+        method_opt = OptionMenu(slides_frame, self.seg_method, *methods)
+        method_opt.pack()
+        self.seg_method.set(methods[0])
         brightness_slider = Scale(slides_frame, label="brightness", orient=HORIZONTAL, variable=self.brightness)
         brightness_slider.pack()
-
         prev_button = Button(nav_frame, text="<<", command=self.__call_prev_frame)
         next_button = Button(nav_frame, text=">>", command=self.__call_next_frame)
         step_scale = Scale(nav_frame, label="step increment", orient=HORIZONTAL,
@@ -45,7 +48,9 @@ class App(Frame):
 
     def __init_canvas(self):
         self.loaded_img = self.__load_image(0)
+        self.canvas.config(width=self.loaded_img.width(),height=self.loaded_img.height())
         self.img_id = self.canvas.create_image(0, 0, anchor='nw', image=self.loaded_img)
+
 
         pass
     def __load_image(self, fileidx):
@@ -53,34 +58,33 @@ class App(Frame):
         img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
         im = Image.fromarray(img)
         print(im)
+
         return ImageTk.PhotoImage(im)
 
     def __show_frame(self, fname_idx):
         # global lmain
         imgtk = self.__load_image(fname_idx)
         print(fname[fname_idx])
-        self.canvas.itemconfig(self.img_id, image=imgtk)
-
-        #id = self.canvas.create_image(0, 0, anchor='nw', image=imgtk)
-        # lmain.configure(image=imgtk)
+        self.loaded_img = imgtk
+        self.img_id = self.canvas.create_image(0, 0, anchor='nw', image=self.loaded_img)
 
     def __call_next_frame(self):
         increment = self.frame_increment.get()
         if increment < 1:
             increment = 1
         self.FRAME_COUNT += increment
-        self.__show_frame(self.FRAME_COUNT)
         if self.FRAME_COUNT >= len(fname):
             self.FRAME_COUNT = len(fname) - 1
+        self.__show_frame(self.FRAME_COUNT)
 
     def __call_prev_frame(self):
         increment = self.frame_increment.get()
         if increment < 1:
             increment = 1
         self.FRAME_COUNT -= increment
-        self.__show_frame(self.FRAME_COUNT)
         if self.FRAME_COUNT < 0:
             FRAME_COUNT = 0
+        self.__show_frame(self.FRAME_COUNT)
 
 
 def sort_numbered_fname(e):
@@ -96,5 +100,5 @@ if __name__ == '__main__':
     fname.sort(key=sort_numbered_fname)
 
     app = App(fileList=fname)
-    app.master.title('foo')
+    app.master.title('Annotator')
     app.mainloop()
