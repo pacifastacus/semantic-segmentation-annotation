@@ -13,7 +13,7 @@ class Dataframe:
     def __init__(self, img_path,
                  gt_dirname=None,
                  gt_autosave=False,
-                 colormap="colormap.txt"):
+                 colormap=[[0,0,0]]):
         """
         :param img_path: image filename
         :param gt_dirname: the folder name of gts. If given, the ground-truth folder will be set to this,
@@ -28,7 +28,7 @@ class Dataframe:
         self._gt_fname = None  # GT filename w/o path
         self._gt_dir = None  # Ground-truth directory (absolute path)
         self._gt_ext = ".png"
-        self._colors = []
+        self._colors = colormap
         self._gt_autosave = gt_autosave
 
         # Init image
@@ -60,16 +60,6 @@ class Dataframe:
             if self._gt_autosave:
                 self.save_gt()
 
-        #Load colormap
-        with open(colormap,"r") as color_file:
-            for line in color_file:
-                r, g, b = line.split()
-                r = int(r)
-                g = int(g)
-                b = int(b)
-                self._colors.append([r,g,b])
-
-
     def __del__(self):
         if self._gt_autosave:
             self.save_gt()
@@ -81,7 +71,7 @@ class Dataframe:
         :return:
         """
         if raw:
-            return self._img
+            return self._img.copy()
 
         img = cv2.cvtColor(self._img, cv2.COLOR_BGR2RGB)
         im = Image.fromarray(img)
@@ -89,11 +79,14 @@ class Dataframe:
 
     def get_gt(self, raw=False):
         if raw:
-            return self._gt
+            return self._gt.copy()
 
         gt = cv2.cvtColor(self._gt, cv2.COLOR_BGR2RGB)
         gt = Image.fromarray(gt)
         return ImageTk.PhotoImage(gt)
+
+    def get_img_shape(self):
+        return self._img.shape
 
     def get_meta(self):
         """
