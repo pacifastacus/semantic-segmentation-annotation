@@ -67,7 +67,7 @@ class Dataframe:
                 r = int(r)
                 g = int(g)
                 b = int(b)
-                self.colors.append([r,g,b])
+                self._colors.append([r,g,b])
 
 
     def __del__(self):
@@ -99,18 +99,19 @@ class Dataframe:
         """
         return {"img": {"path": os.path.join(self._img_dir, self._img_fname),
                         "fname": self._img_fname,
-                        "res": self._img.shape,
-                        "mode": self._img_mode},
+                        "res": self._img.shape},
                 "gt": {"path": os.path.join(self._gt_dir, self._gt_fname),
                        "fname": self._gt_fname,
-                       "res": self._gt.shape,
-                       "mode": self._gt_mode},
+                       "res": self._gt.shape},
                 "wdir": os.path.commonpath((self._img_dir, self._gt_dir)),
                 "autosave":self._gt_autosave}
 
     def save_gt(self):
         filename = os.path.join(self._gt_dir, self._gt_fname)
         cv2.imwrite(filename, self._gt)
+
+    def update_gt(self,gt):
+        self._gt = gt
 
     def label2color(self, label):
         return self._colors[label]
@@ -120,16 +121,3 @@ class Dataframe:
             return self._colors.index(list(rgb))
         except ValueError:
             return -1
-
-if __name__ == "__main__":
-    df = Dataframe("test_data/img/1_cam-image_array_.jpg",gt_autosave=False)
-    gt = df.get_gt()
-    df.save_gt()
-
-    for key, value in df.get_meta().items():
-        if type(value) is dict:
-            print(key, ":")
-            for key, value in value.items():
-                print("\t",key,":",value)
-        else:
-            print(key,":",value)
