@@ -1,8 +1,12 @@
 from tkinter import *
+import numpy as np
+#from edge import calc_edges
 from PIL import Image, ImageTk
+from dataframe import Dataframe
 import cv2
 import glob
 
+DEFAULT_IMG_SIZE = {"height": 200, "width": 200}
 class App(Frame):
     def __init__(self, master=None, fileList=None):
         Frame.__init__(self, master)
@@ -10,18 +14,18 @@ class App(Frame):
         self.brightness = IntVar()
         self.seg_method = StringVar()
         self.fname = fileList
-        self.loaded_img = None
-        self.img_id = None
-        self.canvas = None
+        self._dataframe = Dataframe(fname[0])
+        self.img = self._dataframe.get_image()
+        self.label = self._dataframe.get_gt()
+        #self.label_map = None
         self.FRAME_COUNT = 0
         self.brush_point = (0, 0)
         self.grid()
         self.__createWidgets()
-        self.__init_canvas()
 
     def __createWidgets(self):
-        img_frame = Frame(self)
-        img_frame.pack(side=LEFT)
+        self.img_frame = Frame(self)
+        self.img_frame.pack(side=LEFT)
         ctrl_frame = Frame(self)
         ctrl_frame.pack(side=RIGHT)
         slides_frame = Frame(ctrl_frame)
@@ -29,17 +33,20 @@ class App(Frame):
         nav_frame = Frame(ctrl_frame)
         nav_frame.pack(side=BOTTOM, anchor=N)
 
-        self.__create_canvas(img_frame)
-        # lmain = Label(img_frame)
+        self.__create_canvas(self.img_frame)
+        # lmain = Label(selfimg_frame)
         # lmain.pack()
         self.__create_control_panel(slides_frame)
         self.__create_nav_panel(nav_frame)
 
 
     def __create_canvas(self,img_frame):
-        self.canvas = Canvas(img_frame, width=200, height=200, bg="green", cursor="cross", relief=SUNKEN)
-        self.canvas.pack(fill='both', expand=True)
-        self.canvas.bind("<ButtonPress-1>", self.get_brush_coordinates)
+        self.image_canvas = Canvas(img_frame, **DEFAULT_IMG_SIZE, bg="green", cursor="cross")
+        self.label_canvas = Canvas(img_frame, **DEFAULT_IMG_SIZE, bg="gray")
+        self.image_canvas.pack(side=TOP, fill='both', expand=True)
+        self.label_canvas.pack(side=BOTTOM, fill='both', expand=True)
+        self.image_canvas.bind("<ButtonPress-1>", self.get_brush_coordinates)
+        self.__init_canvas()
 
     def __create_control_panel(self,slides_frame):
         methods = ["None", "Canny", "K-Means"]
@@ -59,25 +66,29 @@ class App(Frame):
         next_button.pack(side=RIGHT)
 
     def __init_canvas(self):
-        self.loaded_img = self.__load_image(0)
-        self.canvas.config(width=self.loaded_img.width(),height=self.loaded_img.height())
-        self.img_id = self.canvas.create_image(0, 0, anchor='nw', image=self.loaded_img)
+        self.img = self._dataframe.get_image()
+        self.label = self._dataframe.get_gt()
+        self.image_canvas.config(width=self.img.width(), height=self.img.height())
+        self.label_canvas.config(width=self.img.width(), height=self.img.height())
+        self.image_canvas.create_image(0, 0, anchor='nw', image=self.img)
+        self.label_canvas.create_image(0, 0, anchor="nw", image=self.label)
+
+#    def __load_image(self, fileidx):
+#        img = cv2.imread(self.fname[fileidx], cv2.IMREAD_COLOR)
+#        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+#        im = Image.fromarray(img)
+#        return ImageTk.PhotoImage(im)
+    def __new_df(self,fileidx):
+        self._dataframe = Dataframe(self.fname[fileidx])
 
 
-    def __load_image(self, fileidx):
-        img = cv2.imread(self.fname[fileidx], cv2.IMREAD_COLOR)
-        img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
-        im = Image.fromarray(img)
-        print(im)
-
-        return ImageTk.PhotoImage(im)
-
-    def __show_frame(self, fname_idx):
+    def __show_img(self):
         # global lmain
-        imgtk = self.__load_image(fname_idx)
-        print(fname[fname_idx])
-        self.loaded_img = imgtk
-        self.img_id = self.canvas.create_image(0, 0, anchor='nw', image=self.loaded_img)
+        self.img = self._dataframe.get_image()
+        self.image_canvas.create_image(0, 0, anchor='nw', image=self.img)
+    def __show_label(self):
+        self.label = self._dataframe.get_gt()
+        self.label_canvas.create_image(0,0,anchor='nw', image=self.label)
 
     def __call_next_frame(self):
         increment = self.frame_increment.get()
@@ -86,7 +97,9 @@ class App(Frame):
         self.FRAME_COUNT += increment
         if self.FRAME_COUNT >= len(fname):
             self.FRAME_COUNT = len(fname) - 1
-        self.__show_frame(self.FRAME_COUNT)
+        self.__new_df(self.FRAME_COUNT)
+        self.__show_img()
+        self.__show_label()
 
     def __call_prev_frame(self):
         increment = self.frame_increment.get()
@@ -95,11 +108,13 @@ class App(Frame):
         self.FRAME_COUNT -= increment
         if self.FRAME_COUNT < 0:
             FRAME_COUNT = 0
-        self.__show_frame(self.FRAME_COUNT)
+        self.__new_df(self.FRAME_COUNT)
+        self.__show_img()
+        self.__show_label()
 
     def get_brush_coordinates(self, event):
         self.brush_point = (event.x, event.y)
-        print("brush coords:",self.brush_point)
+        print("brush coords:", self.brush_point)
 
 
 def sort_numbered_fname(e):

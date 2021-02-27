@@ -74,11 +74,26 @@ class Dataframe:
         if self._gt_autosave:
             self.save_gt()
 
-    def get_image(self):
-        return self._img
+    def get_image(self, raw=False):
+        """
+        return image for Tkinter
+        :param raw: if True return the image as numpy array
+        :return:
+        """
+        if raw:
+            return self._img
 
-    def get_gt(self):
-        return self._gt
+        img = cv2.cvtColor(self._img, cv2.COLOR_BGR2RGB)
+        im = Image.fromarray(img)
+        return ImageTk.PhotoImage(im)
+
+    def get_gt(self, raw=False):
+        if raw:
+            return self._gt
+
+        gt = cv2.cvtColor(self._gt, cv2.COLOR_BGR2RGB)
+        gt = Image.fromarray(gt)
+        return ImageTk.PhotoImage(gt)
 
     def get_meta(self):
         """
