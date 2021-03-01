@@ -46,19 +46,16 @@ class Dataframe:
             self._gt_dir = self._img_dir + "_gt"
         else:
             self._gt_dir = os.path.join(os.path.basename(self._img_dir), gt_dirname)
-        if os.path.exists(self._gt_dir):
-            gt_path = os.path.join(self._gt_dir, self._gt_fname)
-            if os.path.exists(gt_path) and os.path.isfile(gt_path):
-                print("Existing ground truth loaded")
-                self._gt = cv2.imread(gt_path)
-
-            else:
-                print("New ground truth created")
-                self._gt = np.zeros(self._img.shape, dtype=np.uint8)  # Create a new empty map
-        else:
+        if not os.path.exists(self._gt_dir):
             os.mkdir(self._gt_dir)
-            if self._gt_autosave:
-                self.save_gt()
+        gt_path = os.path.join(self._gt_dir, self._gt_fname)
+        if os.path.exists(gt_path) and os.path.isfile(gt_path):
+            print("Existing ground truth loaded")
+            self._gt = cv2.imread(gt_path)
+
+        else:
+            print("New ground truth created")
+            self._gt = np.zeros(self._img.shape, dtype=np.uint8)  # Create a new empty map
 
     def __del__(self):
         if self._gt_autosave:
