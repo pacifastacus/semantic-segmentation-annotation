@@ -2,7 +2,6 @@ import numpy as np
 from PIL import Image, ImageTk
 import cv2
 import os
-import sys
 
 
 class Dataframe:
@@ -13,15 +12,17 @@ class Dataframe:
     def __init__(self, img_path,
                  gt_dirname=None,
                  gt_autosave=False,
-                 colormap=[[0,0,0]]):
+                 colormap=None):
         """
         :param img_path: image filename
         :param gt_dirname: the folder name of gts. If given, the ground-truth folder will be set to this,
                         else it will be <image dir>_gt/
         :param gt_autosave: if True save gt on Dataframe init, update and destroy (default is False)
         """
+        if colormap is None:
+            colormap = [[0, 0, 0]]
         self._img = None  # Image
-        self._gt = np.array(list())   # Ground-truth
+        self._gt = np.array(list())  # Ground-truth
         self._img_fname = None  # Image filename w/o path
         self._img_ext = None  # Image file extension
         self._img_dir = None  # Image directory (absolute path)
@@ -109,13 +110,13 @@ class Dataframe:
                        "fname": self._gt_fname,
                        "res": self._gt.shape},
                 "wdir": os.path.commonpath((self._img_dir, self._gt_dir)),
-                "autosave":self._gt_autosave}
+                "autosave": self._gt_autosave}
 
     def save_gt(self):
         filename = os.path.join(self._gt_dir, self._gt_fname)
         cv2.imwrite(filename, self._gt)
 
-    def update_gt(self,gt):
+    def update_gt(self, gt):
         self._gt = gt
 
     def label2color(self, label):
