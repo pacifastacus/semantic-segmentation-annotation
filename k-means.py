@@ -31,7 +31,7 @@ colors = np.array([[0, 0, 0],
 
 # define criteria, number of clusters(K) to run kmeans()
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.01)
-K = 5
+K = 2
 
 for i in range(len(fname)):
     img = cv2.imread(fname[i],cv2.IMREAD_COLOR)

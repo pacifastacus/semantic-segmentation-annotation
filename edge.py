@@ -15,22 +15,23 @@ def sort_numbered_fname(e):
     return num
 
 
-# Get list of images
-img_dir = 'test_data/img/'
-fname = glob.glob(img_dir + '*.jpg')
-fname.sort(key=sort_numbered_fname)
+if __name__ == "__main__":
+    # Get list of images
+    img_dir = 'test_data/img/'
+    fname = glob.glob(img_dir + '*.jpg')
+    fname.sort(key=sort_numbered_fname)
 
-CANNY_TRS1 = 60
-CANNY_TRS2 = CANNY_TRS1*2
+    CANNY_TRS1 = 60
+    CANNY_TRS2 = CANNY_TRS1 * 2
 
-for i in range(len(fname)):
-    img = cv2.imread(fname[i], cv2.IMREAD_GRAYSCALE)
-    edges = calc_edges(img, CANNY_TRS1, CANNY_TRS2)
-    out = img
-    out[edges != 0] = 0
-    cv2.imshow('out', out)
-    cv2.imshow('edges', edges)
-    if cv2.waitKey() == ord('q'):
-        break
+    for i in range(len(fname)):
+        img = cv2.imread(fname[i], cv2.IMREAD_GRAYSCALE)
+        edges = calc_edges(img, CANNY_TRS1, CANNY_TRS2)
+        out = img
+        out[edges != 0] = 0
+        cv2.imshow('out', out)
+        cv2.imshow('edges', edges)
+        if cv2.waitKey() == ord('q'):
+            break
 
-cv2.destroyAllWindows()
+    cv2.destroyAllWindows()
