@@ -82,11 +82,6 @@ class App(Frame):
         self.image_canvas.create_image(0, 0, anchor='nw', image=self.img)
         self.gt_canvas.create_image(0, 0, anchor="nw", image=self.gt)
 
-#    def __load_image(self, fileidx):
-#        img = cv2.imread(self.fname[fileidx], cv2.IMREAD_COLOR)
-#        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-#        im = Image.fromarray(img)
-#        return ImageTk.PhotoImage(im)
     def __new_df(self,fileidx):
         self._dataframe.save_gt()
         self._dataframe = Dataframe(self.fname[fileidx],gt_autosave=False)
