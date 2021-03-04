@@ -1,6 +1,5 @@
 from tkinter import *
 import numpy as np
-#from edge import calc_edges
 from PIL import Image, ImageTk
 from edge import calc_edges
 from dataframe import Dataframe
