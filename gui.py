@@ -17,13 +17,18 @@ class App(Frame):
         self.fname = fileList
         self._dataframe = Dataframe(fname[0])
         self.img = self._dataframe.get_image()
-        self.mask = np.zeros(self._dataframe.get_img_shape(), dtype=np.uint8)
+        img_shape = self._dataframe.get_img_shape()
+        self.mask = np.zeros(img_shape, dtype=np.uint8)
         self.gt = self._dataframe.get_gt()
         self.label = IntVar()
         self.colormap = colormap
         self.FRAME_COUNT = 0
         self.brush_point = (0, 0)
-        self.brush_mask = np.array([[1]], dtype=np.uint8)
+        self.brush = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]], dtype=bool)
+        self.__brush_rad = (self.brush.shape[0] // 2, self.brush.shape[1] // 2)
+        self.brush_mask = np.zeros((img_shape[0]+self.__brush_rad[0]*2, img_shape[1]+self.__brush_rad[1]*2),
+                                   dtype=bool)
+        del img_shape
         self.__drawing = False
         self.grid()
         self.__createWidgets()
@@ -88,12 +93,12 @@ class App(Frame):
         self._dataframe.save_gt()
         self._dataframe = Dataframe(self.fname[fileidx],gt_autosave=False)
 
-
     def __show_img(self,a=None,b=None,c=None):
         # global lmain
         self.img = self._dataframe.get_image()
         self.preprocess_image()
         self.image_canvas.create_image(0, 0, anchor='nw', image=self.img)
+
     def __show_gt(self):
         self.gt = self._dataframe.get_gt()
         self.gt_canvas.create_image(0, 0, anchor='nw', image=self.gt)
@@ -147,11 +152,15 @@ class App(Frame):
         self._dataframe.update_gt(gt)
         self.__show_gt()
 
-    def draw(self,event):
-        #TODO implement handdrawing
-        self.brush_point = (event.y, event.x)
+    def draw(self, event):
+        self.brush_point = (event.x, event.y)
         gt = self._dataframe.get_gt(raw=True)
-        gt[self.brush_point] = colors[self.label.get()]
+        s = slice(self.brush_point[1],self.brush_point[1]+self.brush.shape[0]), \
+            slice(self.brush_point[0],self.brush_point[0]+self.brush.shape[1])
+        self.brush_mask[s] = self.brush
+        gt[self.brush_mask[self.__brush_rad[0]:self.brush_mask.shape[0]-1,
+                     self.__brush_rad[1]:self.brush_mask.shape[1]-1]] = colors[self.label.get()]
+        #gt[self.brush_point] = colors[self.label.get()]
         self._dataframe.update_gt(gt)
         self.__show_gt()
 
