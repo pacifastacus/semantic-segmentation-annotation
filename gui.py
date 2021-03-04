@@ -24,7 +24,8 @@ class App(Frame):
         self.colormap = colormap
         self.FRAME_COUNT = 0
         self.brush_point = (0, 0)
-        self.bursh_mode = "bucket" # "bucket"|"bursh"|"pencil"
+        self.brush_mask = np.array([[1]], dtype=np.uint8)
+        self.__drawing = False
         self.grid()
         self.__createWidgets()
 
@@ -50,7 +51,9 @@ class App(Frame):
         self.gt_canvas = Canvas(img_frame, **DEFAULT_IMG_SIZE, bg="gray")
         self.image_canvas.pack(side=TOP, fill='both', expand=True)
         self.gt_canvas.pack(side=BOTTOM, fill='both', expand=True)
-        self.image_canvas.bind("<ButtonPress-1>", self.__draw_action)
+        self.image_canvas.bind("<ButtonPress-1>", self.__start_draw_action)
+        self.image_canvas.bind("<ButtonRelease-1>", self.__stop_draw_action)
+        self.image_canvas.bind("<Motion>",self.__draw_action)
         self.__init_canvas()
 
     def __create_control_panel(self,slides_frame):
@@ -118,8 +121,18 @@ class App(Frame):
         self.__show_img()
         self.__show_gt()
 
+    def __start_draw_action(self,event):
+        self.__drawing = True
+        self.__draw_action(event) #We have to call once before mouse movement starts
+
+    def __stop_draw_action(self,event):
+        self.__drawing = False
+
     def __draw_action(self,event):
-        if self.seg_method.get() == "Canny":
+        if not self.__drawing or not(0 <= event.x < self.img.width() and 0 <= event.y < self.img.height()):
+            #self.get_brush_coordinates(event)
+            pass
+        elif self.seg_method.get() == "Canny":
             self.fill_region(event)
         elif self.seg_method.get() == "None":
             self.draw(event)
@@ -137,7 +150,11 @@ class App(Frame):
 
     def draw(self,event):
         #TODO implement handdrawing
-        pass
+        self.brush_point = (event.y, event.x)
+        gt = self._dataframe.get_gt(raw=True)
+        gt[self.brush_point] = colors[self.label.get()]
+        self._dataframe.update_gt(gt)
+        self.__show_gt()
 
     def preprocess_image(self):
         method = self.seg_method.get()
